@@ -1,0 +1,40 @@
+{
+  "id": "/",
+  "name": "Suivi Mini POS — Paymaster Algeria / RunPay",
+  "short_name": "Mini POS",
+  "description": "Application de suivi des déploiements de terminaux Mini POS pour Paymaster Algeria / RunPay.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F8F7",
+  "theme_color": "#1A3A6B",
+  "lang": "fr",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>Suivi Mini POS — Paymaster Algeria / RunPay</title>
+
+<!-- PWA: manifest -->
+<link rel="manifest" href="./manifest.webmanifest" />
+
+<!-- PWA: theme & status bar color -->
+<meta name="theme-color" content="#1A3A6B" />
+<meta name="background-color" content="#F7F8F7" />
+
+<!-- PWA: iOS support (Safari ne lit pas le manifest pour tout) -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Mini POS" />
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+<style>
+/* ============================================================
+   Suivi Mini POS — Styles (CSS pur, sans dépendance externe)
+   ============================================================ */
+
+:root {
+  --navy: #1A3A6B;
+  --navy-dark: #142C52;
+  --navy-darker: #0F2747;
+  --green: #5BA32E;
+  --green-dark: #4C8A24;
+  --bg: #F7F8F7;
+  --text-dark: #1E293B;
+  --text-mid: #475569;
+  --text-light: #94A3B8;
+  --border: #E2E8F0;
+  --white: #FFFFFF;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --emerald: #10B981;
+
+  --c-yellow: #F2C200;
+  --c-green: #2E8B57;
+  --c-blue: #1E6FD9;
+  --c-brown: #8B5A2B;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text-dark);
+  font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 16px; /* éviter le zoom auto sur mobile */
+}
+
+button { cursor: pointer; }
+
+#app { min-height: 100vh; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+[dir="rtl"] .icon-flip { transform: scaleX(-1); }
+
+/* ---------- Utilities ---------- */
+.hidden { display: none !important; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  transition: opacity 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.btn:active { opacity: 0.8; }
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover { background: var(--navy-dark); }
+.btn-accent { background: var(--green); color: white; }
+.btn-accent:hover { background: var(--green-dark); }
+.btn-outline { background: white; border-color: var(--border); color: var(--text-mid); }
+.btn-outline:hover { background: #F8FAFC; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-mid); }
+.btn-ghost:hover { background: #F1F5F9; }
+.btn-danger { background: var(--red); color: white; }
+.btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+.btn-icon {
+  width: 40px; height: 40px; padding: 0; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--border); color: var(--text-mid);
+}
+.btn-icon:hover { background: #F8FAFC; }
+.btn-icon-sm {
+  width: 30px; height: 30px; padding: 0; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--text-light);
+}
+.btn-icon-sm:hover { background: #F1F5F9; color: var(--navy); }
+
+/* ---------- Form fields ---------- */
+.field { margin-bottom: 14px; }
+.field-label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--text-mid);
+  margin-bottom: 6px;
+}
+.input-group {
+  display: flex; align-items: center; border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; background: white;
+}
+.input-group:focus-within { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,58,107,0.12); }
+.input-icon {
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-light); flex-shrink: 0;
+}
+.input-group input, .input-group select {
+  flex: 1; min-width: 0; height: 40px; border: none; outline: none;
+  background: transparent; font-size: 14px; padding: 0 12px;
+}
+.input-group input { padding-inline-start: 0; }
+.input-plain {
+  width: 100%; border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 12px; font-size: 14px; outline: none; background: white;
+}
+.input-plain:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,58,107,0.12); }
+textarea.input-plain { resize: vertical; min-height: 64px; }
+.error-text { font-size: 12px; color: var(--red); margin-top: 4px; }
+
+/* ---------- Login screen ---------- */
+.login-page { min-height: 100vh; background: var(--navy-darker); }
+.login-wrap { max-width: 420px; margin: 0 auto; padding: 40px 16px; }
+.lang-switch {
+  display: flex; justify-content: center; gap: 4px; background: rgba(255,255,255,0.1);
+  border-radius: 999px; padding: 4px; width: fit-content; margin: 0 auto 24px;
+}
+.lang-switch button {
+  border: none; background: transparent; color: rgba(255,255,255,0.7);
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+.lang-switch button.active { background: white; color: var(--navy-darker); }
+.login-card { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.login-logo {
+  width: 56px; height: 56px; border-radius: 16px; background: var(--navy);
+  display: flex; align-items: center; justify-content: center; color: white;
+  font-weight: 700; font-size: 22px; margin: 0 auto 12px;
+}
+.login-title { text-align: center; font-weight: 700; font-size: 17px; margin: 0; }
+.login-sub { text-align: center; color: var(--text-light); font-size: 13px; margin: 2px 0 20px; }
+.role-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.role-btn {
+  padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: white;
+  color: var(--text-mid); font-size: 13px; font-weight: 600;
+}
+.role-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
+.login-submit { width: 100%; padding: 13px; border-radius: 12px; font-size: 15px; margin-top: 6px; }
+.login-footer { text-align: center; color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 20px; }
+
+/* ---------- App shell ---------- */
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar {
+  display: none;
+  width: 240px; flex-shrink: 0; background: var(--navy); color: white;
+  flex-direction: column;
+}
+.sidebar-header {
+  display: flex; align-items: center; gap: 12px; padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo {
+  width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+}
+.sidebar-title { font-size: 13px; font-weight: 600; margin: 0; }
+.sidebar-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin: 0; }
+.sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+  color: rgba(255,255,255,0.8); background: transparent; border: none; font-size: 14px;
+  text-align: start; width: 100%;
+}
+.nav-item.active { background: white; color: var(--navy); font-weight: 600; }
+.nav-item:not(.active):hover { background: rgba(255,255,255,0.1); }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-user { padding: 8px 12px; margin-bottom: 4px; }
+.sidebar-user-name { font-size: 13px; font-weight: 500; margin: 0; }
+.sidebar-user-role { font-size: 11px; color: rgba(255,255,255,0.6); margin: 0; }
+
+.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); background: white;
+}
+.topbar-brand { display: flex; align-items: center; gap: 8px; }
+.topbar-logo {
+  width: 32px; height: 32px; border-radius: 8px; background: var(--navy); color: white;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+}
+.topbar-title { font-weight: 600; color: var(--text-mid); margin: 0; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+.content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+
+/* ---------- Mobile bottom nav ---------- */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; background: var(--navy); color: white;
+  display: flex; justify-content: space-around; padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 40; border-top: 1px solid rgba(255,255,255,0.1);
+}
+.bottom-nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: transparent; border: none; color: rgba(255,255,255,0.5);
+  font-size: 10px; padding: 4px 10px;
+}
+.bottom-nav-item.active { color: white; }
+
+@media (min-width: 768px) {
+  .sidebar { display: flex; }
+  .bottom-nav { display: none; }
+  .content { padding-bottom: 24px; }
+  .topbar-brand-mobile { display: none; }
+}
+
+/* ---------- Cards / stats ---------- */
+.stat-card {
+  background: white; border: 1px solid var(--border); border-radius: 16px;
+  padding: 18px; display: flex; align-items: center; gap: 14px; flex: 1; min-width: 220px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.stat-value { font-size: 22px; font-weight: 700; margin: 0; line-height: 1.1; }
+.stat-label { font-size: 12px; color: var(--text-light); margin: 2px 0 0; }
+
+.card {
+  background: white; border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03); overflow: hidden;
+}
+.card-header {
+  padding: 14px 18px; border-bottom: 1px solid #F1F5F9; font-weight: 600; font-size: 13px; color: var(--text-mid);
+}
+.card-empty { text-align: center; color: var(--text-light); padding: 36px 16px; font-size: 13px; }
+
+.activity-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 18px; border-bottom: 1px solid #F8FAFC; font-size: 13px;
+}
+.activity-row:last-child { border-bottom: none; }
+.badge {
+  font-size: 10px; padding: 4px 8px; border-radius: 999px; font-weight: 600; flex-shrink: 0;
+}
+.badge-amber { background: #FEF3C7; color: #B45309; }
+.badge-emerald { background: #D1FAE5; color: #047857; }
+
+/* ---------- Notifications ---------- */
+.bell-wrap { position: relative; }
+.bell-badge {
+  position: absolute; top: -4px; right: -4px; width: 16px; height: 16px;
+  background: var(--red); color: white; font-size: 10px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+[dir="rtl"] .bell-badge { right: auto; left: -4px; }
+.dropdown-panel {
+  position: absolute; top: 46px; inset-inline-end: 0; width: 280px; background: white;
+  border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  z-index: 30; overflow: hidden;
+}
+.dropdown-header { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; font-weight: 600; font-size: 13px; }
+.dropdown-list { max-height: 280px; overflow-y: auto; }
+.notif-row { padding: 12px 16px; display: flex; gap: 8px; align-items: flex-start; border-bottom: 1px solid #FAFAFA; font-size: 13px; }
+.notif-row:last-child { border-bottom: none; }
+
+/* ---------- Search / filters ---------- */
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.search-box { flex: 1; max-width: 420px; }
+.filters-bar {
+  display: flex; flex-wrap: wrap; gap: 8px; background: #F8FAFC; border-radius: 12px; padding: 10px; margin-bottom: 14px;
+}
+.filters-bar select {
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 13px; background: white;
+}
+
+/* ---------- Table ---------- */
+.table-scroll { overflow-x: auto; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+table.data-table thead th {
+  background: #F8FAFC; color: var(--text-light); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.03em; text-align: start; padding: 10px 14px; cursor: pointer; user-select: none; white-space: nowrap;
+}
+table.data-table tbody td { padding: 10px 14px; white-space: nowrap; border-top: 1px solid #F8FAFC; color: var(--text-mid); }
+table.data-table tbody tr:hover { background: #FAFBFC; }
+.cell-strong { font-weight: 600; color: var(--text-dark); }
+.cell-mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+.cell-trunc { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.row-count { font-size: 12px; color: var(--text-light); margin-top: 8px; }
+
+.contract-ok { color: var(--emerald); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+.contract-missing { color: var(--red); display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-box {
+  background: white; border-radius: 20px; width: 100%; max-width: 460px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+}
+.modal-box.wide { max-width: 680px; }
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9; position: sticky; top: 0; background: white;
+}
+.modal-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.modal-body { padding: 20px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; }
+
+.file-drop {
+  display: flex; align-items: center; gap: 8px; border: 1.5px dashed var(--border);
+  border-radius: 12px; padding: 12px; font-size: 13px; color: var(--text-light); cursor: pointer;
+}
+.file-drop:hover { background: #FAFBFC; }
+.file-drop .upload-tag { margin-inline-start: auto; font-size: 12px; font-weight: 600; color: var(--navy); }
+
+/* ---------- Monthly tracking ---------- */
+.tracking-table { border-collapse: collapse; font-size: 11px; min-width: 1100px; }
+.tracking-table th, .tracking-table td { padding: 2px; }
+.tracking-table thead th {
+  background: #F8FAFC; color: var(--text-light); text-transform: uppercase; font-size: 10px;
+  padding: 8px 6px; text-align: center; letter-spacing: 0.02em;
+}
+.tracking-sticky {
+  position: sticky; background: white; z-index: 5; text-align: start !important;
+  border-inline-end: 1px solid #F1F5F9; padding: 8px 12px !important; white-space: nowrap;
+}
+thead .tracking-sticky { background: #F8FAFC; }
+.tracking-cell-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: 1px solid #F1F5F9; background: transparent;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.tracking-cell-btn:hover { border-color: #CBD5E1; }
+.tracking-dot { width: 8px; height: 8px; border-radius: 50%; }
+.color-picker-popup {
+  position: absolute; z-index: 30; background: white; border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.18); padding: 12px; width: 220px;
+}
+.color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.color-opt {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px;
+  border: 1px solid #F1F5F9; font-size: 11px; text-align: start;
+}
+.color-opt.selected { border-color: #94A3B8; }
+.color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-mid); }
+
+/* ---------- Settings ---------- */
+.settings-section { max-width: 480px; }
+.avatar-circle {
+  width: 44px; height: 44px; border-radius: 50%; background: rgba(26,58,107,0.1); color: var(--navy);
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.lang-grid button {
+  padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: white;
+  font-size: 13px; font-weight: 600; color: var(--text-mid);
+}
+.lang-grid button.active { background: var(--navy); border-color: var(--navy); color: white; }
+
+/* ---------- Toast / confirm ---------- */
+.confirm-text { font-size: 14px; color: var(--text-mid); margin: 0 0 18px; }
+
+/* ---------- Loading / error screen ---------- */
+#boot-screen {
+  position: fixed; inset: 0; background: var(--navy-darker); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: white; z-index: 9999; text-align: center; padding: 24px;
+}
+.spinner {
+  width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.25); border-top-color: white;
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .sidebar, .bottom-nav, .topbar, .toolbar, .modal-overlay { display: none !important; }
+  .content { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="boot-screen">
+  <div class="spinner"></div>
+  <p>Chargement…</p>
+</div>
+
+<div id="app"></div>
+
+<script>
+// icons.js — Bibliothèque d'icônes SVG en JavaScript pur (chaînes de caractères).
+// Usage : Icon.search(16) renvoie une chaîne <svg>...</svg> prête à insérer dans innerHTML.
+
+const Icon = (() => {
+  function svg(paths, size = 18) {
+    const inner = paths.join("");
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  }
+
+  return {
+    dashboard: (s) => svg(['<rect x="3" y="3" width="7" height="9" rx="1"/>','<rect x="14" y="3" width="7" height="5" rx="1"/>','<rect x="14" y="12" width="7" height="9" rx="1"/>','<rect x="3" y="16" width="7" height="5" rx="1"/>'], s),
+    table: (s) => svg(['<path d="M9 3v18"/>','<rect x="3" y="3" width="18" height="18" rx="2"/>','<path d="M3 9h18"/>','<path d="M3 15h18"/>'], s),
+    calendar: (s) => svg(['<rect x="3" y="4" width="18" height="18" rx="2"/>','<path d="M16 2v4"/>','<path d="M8 2v4"/>','<path d="M3 10h18"/>','<path d="M8 14h.01"/>','<path d="M12 14h.01"/>','<path d="M16 14h.01"/>','<path d="M8 18h.01"/>','<path d="M12 18h.01"/>'], s),
+    settings: (s) => svg(['<circle cx="12" cy="12" r="3"/>','<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'], s),
+    logout: (s) => svg(['<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>','<path d="M16 17l5-5-5-5"/>','<path d="M21 12H9"/>'], s),
+    search: (s) => svg(['<circle cx="11" cy="11" r="8"/>','<path d="M21 21l-4.3-4.3"/>'], s),
+    plus: (s) => svg(['<path d="M12 5v14"/>','<path d="M5 12h14"/>'], s),
+    filter: (s) => svg(['<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>'], s),
+    download: (s) => svg(['<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>','<path d="M7 10l5 5 5-5"/>','<path d="M12 15V3"/>'], s),
+    camera: (s) => svg(['<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>','<circle cx="12" cy="13" r="3"/>'], s),
+    bell: (s) => svg(['<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>','<path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'], s),
+    x: (s) => svg(['<path d="M18 6L6 18"/>','<path d="M6 6l12 12"/>'], s),
+    trash: (s) => svg(['<path d="M3 6h18"/>','<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>','<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>','<path d="M10 11v6"/>','<path d="M14 11v6"/>'], s),
+    pencil: (s) => svg(['<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>'], s),
+    chevronDown: (s) => svg(['<path d="M6 9l6 6 6-6"/>'], s),
+    fileText: (s) => svg(['<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>','<path d="M14 2v6h6"/>','<path d="M16 13H8"/>','<path d="M16 17H8"/>','<path d="M10 9H8"/>'], s),
+    fileSpreadsheet: (s) => svg(['<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>','<path d="M14 2v6h6"/>','<path d="M8 13h2"/>','<path d="M14 13h2"/>','<path d="M8 17h2"/>','<path d="M14 17h2"/>'], s),
+    package: (s) => svg(['<path d="M16.5 9.4L7.55 4.24"/>','<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>','<path d="M3.27 6.96L12 12.01l8.73-5.05"/>','<path d="M12 22.08V12"/>'], s),
+    checkCircle: (s) => svg(['<circle cx="12" cy="12" r="10"/>','<path d="M9 12l2 2 4-4"/>'], s),
+    alertTriangle: (s) => svg(['<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>','<path d="M12 9v4"/>','<path d="M12 17h.01"/>'], s),
+    globe: (s) => svg(['<circle cx="12" cy="12" r="10"/>','<path d="M2 12h20"/>','<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'], s),
+    user: (s) => svg(['<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>','<circle cx="12" cy="7" r="4"/>'], s),
+    lock: (s) => svg(['<rect x="3" y="11" width="18" height="11" rx="2"/>','<path d="M7 11V7a5 5 0 0 1 10 0v4"/>'], s),
+    paperclip: (s) => svg(['<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>'], s),
+  };
+})();
+// i18n.js — Dictionnaires de traduction (FR / EN / AR)
+
+const STRINGS = {
+  fr: {
+    dir: "ltr",
+    appName: "Paymaster Algeria",
+    appSub: "Suivi Mini POS",
+    login: "Connexion",
+    username: "Identifiant",
+    password: "Mot de passe",
+    roleCommercial: "Commercial",
+    roleEngineer: "Ingénieur technique",
+    signIn: "Se connecter",
+    dashboard: "Tableau de bord",
+    mainTable: "Tableau principal",
+    monthlyTracking: "Suivi mensuel",
+    settings: "Paramètres",
+    logout: "Déconnexion",
+    stockCard: "Stock du commercial",
+    installedCard: "Terminaux installés",
+    units: "unités",
+    search: "Rechercher...",
+    addEntry: "Ajouter",
+    filters: "Filtres",
+    export: "Exporter",
+    exportPdf: "Exporter en PDF",
+    exportXlsx: "Exporter en Excel",
+    exportCsv: "Exporter en CSV",
+    scanBarcode: "Scanner code-barres",
+    col_date: "Date",
+    col_location: "Commune",
+    col_barcode: "Code-barres",
+    col_iccid: "ICCID",
+    col_kit: "Kit Code",
+    col_enterprise: "Entreprise",
+    col_observation: "Observation",
+    col_payment: "Chèque N° / Espèces",
+    col_bank: "Banque",
+    col_contract: "Contrat",
+    col_commercial: "Commercial",
+    col_actions: "Actions",
+    all: "Tous",
+    noFile: "Aucun fichier",
+    upload: "Importer",
+    save: "Enregistrer",
+    cancel: "Annuler",
+    delete: "Supprimer",
+    edit: "Modifier",
+    confirmDelete: "Confirmer la suppression de cette ligne ?",
+    yes: "Oui",
+    no: "Non",
+    newEntry: "Nouvelle entrée",
+    editEntry: "Modifier l'entrée",
+    requiredField: "Ce champ est obligatoire",
+    legend: "Légende",
+    legend_yellow: "Web Agent Windows",
+    legend_green: "Mini-O",
+    legend_blue: "Mini POS",
+    legend_brown: "Application Mobile",
+    commercialReg: "Zone / Région",
+    commercialName: "Nom du commercial",
+    phone: "Téléphone",
+    notifications: "Notifications",
+    notif_pending: "terminaux non installés depuis plus de 7 jours",
+    notif_contract: "contrats manquants",
+    notif_incomplete: "fiches incomplètes",
+    notif_lowstock: "Stock faible : il vous reste",
+    noNotifications: "Aucune notification",
+    language: "Langue",
+    profile: "Profil",
+    cellNote: "Note / valeur",
+    selectColor: "Couleur d'activité",
+    none: "Aucune",
+    totalRows: "lignes",
+    close: "Fermer",
+    welcomeBack: "Bon retour",
+    quickStats: "Aperçu rapide",
+    recentActivity: "Activité récente",
+    noActivity: "Aucune activité récente",
+    by: "par",
+    contractMissing: "Contrat manquant",
+    contractAttached: "Contrat joint",
+    status: "Statut",
+  },
+  en: {
+    dir: "ltr",
+    appName: "Paymaster Algeria",
+    appSub: "Mini POS Tracking",
+    login: "Sign in",
+    username: "Username",
+    password: "Password",
+    roleCommercial: "Sales Rep",
+    roleEngineer: "Technical Engineer",
+    signIn: "Sign in",
+    dashboard: "Dashboard",
+    mainTable: "Main table",
+    monthlyTracking: "Monthly tracking",
+    settings: "Settings",
+    logout: "Log out",
+    stockCard: "Sales rep stock",
+    installedCard: "Installed terminals",
+    units: "units",
+    search: "Search...",
+    addEntry: "Add",
+    filters: "Filters",
+    export: "Export",
+    exportPdf: "Export to PDF",
+    exportXlsx: "Export to Excel",
+    exportCsv: "Export to CSV",
+    scanBarcode: "Scan barcode",
+    col_date: "Date",
+    col_location: "Commune",
+    col_barcode: "Barcode",
+    col_iccid: "ICCID",
+    col_kit: "Kit code",
+    col_enterprise: "Enterprise",
+    col_observation: "Observation",
+    col_payment: "Cheque No. / Cash",
+    col_bank: "Bank",
+    col_contract: "Contract",
+    col_commercial: "Sales rep",
+    col_actions: "Actions",
+    all: "All",
+    noFile: "No file",
+    upload: "Upload",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    confirmDelete: "Delete this row?",
+    yes: "Yes",
+    no: "No",
+    newEntry: "New entry",
+    editEntry: "Edit entry",
+    requiredField: "This field is required",
+    legend: "Legend",
+    legend_yellow: "Web Agent Windows",
+    legend_green: "Mini-O",
+    legend_blue: "Mini POS",
+    legend_brown: "Mobile App",
+    commercialReg: "Region / Zone",
+    commercialName: "Sales rep name",
+    phone: "Phone",
+    notifications: "Notifications",
+    notif_pending: "terminals not installed for over 7 days",
+    notif_contract: "missing contracts",
+    notif_incomplete: "incomplete records",
+    notif_lowstock: "Low stock: you have",
+    noNotifications: "No notifications",
+    language: "Language",
+    profile: "Profile",
+    cellNote: "Note / value",
+    selectColor: "Activity color",
+    none: "None",
+    totalRows: "rows",
+    close: "Close",
+    welcomeBack: "Welcome back",
+    quickStats: "Quick stats",
+    recentActivity: "Recent activity",
+    noActivity: "No recent activity",
+    by: "by",
+    contractMissing: "Contract missing",
+    contractAttached: "Contract attached",
+    status: "Status",
+  },
+  ar: {
+    dir: "rtl",
+    appName: "بايماستر الجزائر",
+    appSub: "تتبع أجهزة Mini POS",
+    login: "تسجيل الدخول",
+    username: "اسم المستخدم",
+    password: "كلمة المرور",
+    roleCommercial: "تجاري",
+    roleEngineer: "مهندس تقني",
+    signIn: "دخول",
+    dashboard: "لوحة التحكم",
+    mainTable: "الجدول الرئيسي",
+    monthlyTracking: "التتبع الشهري",
+    settings: "الإعدادات",
+    logout: "تسجيل الخروج",
+    stockCard: "مخزون التجاري",
+    installedCard: "الأجهزة المثبتة",
+    units: "وحدة",
+    search: "بحث...",
+    addEntry: "إضافة",
+    filters: "تصفية",
+    export: "تصدير",
+    exportPdf: "تصدير PDF",
+    exportXlsx: "تصدير Excel",
+    exportCsv: "تصدير CSV",
+    scanBarcode: "مسح الرمز الشريطي",
+    col_date: "التاريخ",
+    col_location: "البلدية",
+    col_barcode: "الرمز الشريطي",
+    col_iccid: "ICCID",
+    col_kit: "رمز العلبة",
+    col_enterprise: "الشركة",
+    col_observation: "ملاحظة",
+    col_payment: "رقم الشيك / نقدًا",
+    col_bank: "البنك",
+    col_contract: "العقد",
+    col_commercial: "التجاري",
+    col_actions: "إجراءات",
+    all: "الكل",
+    noFile: "لا يوجد ملف",
+    upload: "استيراد",
+    save: "حفظ",
+    cancel: "إلغاء",
+    delete: "حذف",
+    edit: "تعديل",
+    confirmDelete: "تأكيد حذف هذا السطر؟",
+    yes: "نعم",
+    no: "لا",
+    newEntry: "إدخال جديد",
+    editEntry: "تعديل الإدخال",
+    requiredField: "هذا الحقل مطلوب",
+    legend: "دليل الألوان",
+    legend_yellow: "Web Agent Windows",
+    legend_green: "Mini-O",
+    legend_blue: "Mini POS",
+    legend_brown: "تطبيق الهاتف",
+    commercialReg: "المنطقة / الجهة",
+    commercialName: "اسم التجاري",
+    phone: "الهاتف",
+    notifications: "الإشعارات",
+    notif_pending: "أجهزة غير مثبتة منذ أكثر من 7 أيام",
+    notif_contract: "عقود ناقصة",
+    notif_incomplete: "بيانات غير مكتملة",
+    notif_lowstock: "مخزون منخفض: تبقى لديك",
+    noNotifications: "لا توجد إشعارات",
+    language: "اللغة",
+    profile: "الملف الشخصي",
+    cellNote: "ملاحظة / قيمة",
+    selectColor: "لون النشاط",
+    none: "بدون",
+    totalRows: "سطر",
+    close: "إغلاق",
+    welcomeBack: "مرحبًا بعودتك",
+    quickStats: "نظرة سريعة",
+    recentActivity: "النشاط الأخير",
+    noActivity: "لا يوجد نشاط حديث",
+    by: "بواسطة",
+    contractMissing: "العقد غير موجود",
+    contractAttached: "العقد مرفق",
+    status: "الحالة",
+  },
+};
+
+const LANGS = [
+  { code: "fr", label: "Français" },
+  { code: "en", label: "English" },
+  { code: "ar", label: "العربية" },
+];
+// state.js — État global de l'application + données de démonstration.
+
+const ACTIVITY_COLORS = {
+  yellow: { hex: "#F2C200", labelKey: "legend_yellow" },
+  green: { hex: "#2E8B57", labelKey: "legend_green" },
+  blue: { hex: "#1E6FD9", labelKey: "legend_blue" },
+  brown: { hex: "#8B5A2B", labelKey: "legend_brown" },
+};
+
+const BANKS = ["BNA", "CPA", "BEA", "CNEP", "AGB", "Société Générale Algérie"];
+const COMMUNES = ["Alger Centre", "Oran", "Constantine", "Annaba", "Blida", "Sétif", "Tlemcen", "Béchar"];
+const REPS = ["Yacine Benali", "Sara Haddad", "Karim Boudiaf", "Amel Cherif"];
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function seedMainRows() {
+  const rows = [];
+  const enterprises = ["SARL Beni Foods", "Café Le Sahel", "Pharmacie El Amal", "Superette Nour", "Boulangerie Tassili"];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i * 2);
+    rows.push({
+      id: uid(),
+      date: d.toISOString().slice(0, 10),
+      location: COMMUNES[i % COMMUNES.length],
+      barcode: `MP${(100000 + i * 7).toString()}`,
+      iccid: `8921304100${(1000 + i).toString()}`,
+      kitCode: `KIT-${(2000 + i).toString()}`,
+      enterprise: enterprises[i % enterprises.length],
+      observation: i % 3 === 0 ? "Installation terminée" : "",
+      payment: i % 2 === 0 ? "Espèces" : `Chèque N°${100 + i}`,
+      bank: BANKS[i % BANKS.length],
+      contract: i % 4 !== 0,
+      contractName: i % 4 !== 0 ? `contrat_${i}.pdf` : null,
+      commercial: REPS[i % REPS.length],
+      status: i % 5 === 0 ? "stock" : "installed",
+    });
+  }
+  return rows;
+}
+
+function seedTrackingRows() {
+  return REPS.map((name, idx) => ({
+    id: uid(),
+    region: COMMUNES[idx % COMMUNES.length],
+    name,
+    phone: `055${(1000000 + idx * 1234).toString().slice(0, 7)}`,
+    cells: {},
+  }));
+}
+
+// ----------------------------------------------------------------
+// État global (in-memory). Aucune donnée n'est envoyée vers un serveur :
+// tout est perdu à la fermeture de l'onglet (prototype hors-ligne).
+// ----------------------------------------------------------------
+const state = {
+  lang: "fr",
+  user: null, // { role, username }
+  view: "dashboard",
+  mainRows: seedMainRows(),
+  trackingRows: seedTrackingRows(),
+  tracking: { month: new Date().getMonth(), year: new Date().getFullYear() },
+  ui: {
+    query: "",
+    bankFilter: "",
+    communeFilter: "",
+    repFilter: "",
+    showFilters: false,
+    sortKey: "date",
+    sortDir: "desc",
+    showExportMenu: false,
+    showEntryForm: false,
+    showNotifPanel: false,
+    activeTrackingCell: null, // { rowId, day }
+    loginRole: "commercial",
+    loginError: "",
+  },
+};
+
+function t(key) {
+  return STRINGS[state.lang][key] ?? key;
+}
+
+function daysInMonth(month, year) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+// render-login.js — Écran de connexion.
+
+function renderLogin() {
+  const tr = t;
+  const root = document.getElementById("app");
+  document.documentElement.dir = STRINGS[state.lang].dir;
+  document.documentElement.lang = state.lang;
+
+  root.innerHTML = `
+    <div class="login-page">
+      <div class="login-wrap">
+        <div class="lang-switch" id="lang-switch">
+          ${LANGS.map(
+            (l) => `<button data-lang="${l.code}" class="${state.lang === l.code ? "active" : ""}">${l.label}</button>`
+          ).join("")}
+        </div>
+
+        <div class="login-card">
+          <div class="login-logo">R</div>
+          <h1 class="login-title">${escapeHtml(tr("appName"))}</h1>
+          <p class="login-sub">${escapeHtml(tr("appSub"))}</p>
+
+          <div class="role-toggle">
+            <button id="role-commercial" class="role-btn ${state.ui.loginRole === "commercial" ? "active" : ""}">${escapeHtml(tr("roleCommercial"))}</button>
+            <button id="role-engineer" class="role-btn ${state.ui.loginRole === "engineer" ? "active" : ""}">${escapeHtml(tr("roleEngineer"))}</button>
+          </div>
+
+          <div class="field">
+            <label class="field-label">${escapeHtml(tr("username"))}</label>
+            <div class="input-group">
+              <span class="input-icon">${Icon.user(16)}</span>
+              <input id="login-username" type="text" placeholder="${state.ui.loginRole === "commercial" ? "yacine.benali" : "ing.tech01"}" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">${escapeHtml(tr("password"))}</label>
+            <div class="input-group">
+              <span class="input-icon">${Icon.lock(16)}</span>
+              <input id="login-password" type="password" placeholder="••••••••" />
+            </div>
+          </div>
+
+          ${state.ui.loginError ? `<p class="error-text">${escapeHtml(state.ui.loginError)}</p>` : ""}
+
+          <button id="login-submit" class="btn btn-accent login-submit">${escapeHtml(tr("signIn"))}</button>
+        </div>
+
+        <p class="login-footer">RunPay · Paymaster Algeria © ${new Date().getFullYear()}</p>
+      </div>
+    </div>
+  `;
+
+  // --- Bindings ---
+  document.querySelectorAll("#lang-switch button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.lang = btn.dataset.lang;
+      renderLogin();
+    });
+  });
+
+  document.getElementById("role-commercial").addEventListener("click", () => {
+    state.ui.loginRole = "commercial";
+    renderLogin();
+  });
+  document.getElementById("role-engineer").addEventListener("click", () => {
+    state.ui.loginRole = "engineer";
+    renderLogin();
+  });
+
+  function attemptLogin() {
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+    if (!username || !password) {
+      state.ui.loginError = tr("requiredField");
+      renderLogin();
+      return;
+    }
+    state.user = { role: state.ui.loginRole, username };
+    state.ui.loginError = "";
+    state.view = "dashboard";
+    renderApp();
+  }
+
+  document.getElementById("login-submit").addEventListener("click", attemptLogin);
+
+  ["login-username", "login-password"].forEach((id) => {
+    document.getElementById(id).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") attemptLogin();
+    });
+  });
+}
+// render-shell.js — Coquille de l'application (barre latérale, en-tête, navigation) + tableau de bord.
+
+function computeStock() {
+  return state.mainRows.filter((r) => r.status === "stock").length;
+}
+function computeInstalled() {
+  return state.mainRows.filter((r) => r.status === "installed").length;
+}
+
+function computeNotifications() {
+  const list = [];
+  const pendingCount = state.mainRows.filter((r) => r.status === "stock").length;
+  const missingContracts = state.mainRows.filter((r) => !r.contract).length;
+  const incomplete = state.mainRows.filter((r) => !r.enterprise || !r.bank || !r.location).length;
+  const stock = computeStock();
+
+  if (pendingCount > 0) list.push({ type: "warning", text: `${pendingCount} ${t("notif_pending")}` });
+  if (missingContracts > 0) list.push({ type: "danger", text: `${missingContracts} ${t("notif_contract")}` });
+  if (incomplete > 0) list.push({ type: "warning", text: `${incomplete} ${t("notif_incomplete")}` });
+  if (stock <= 3) list.push({ type: "danger", text: `${t("notif_lowstock")} ${stock} ${t("units")}` });
+  return list;
+}
+
+const NAV_ITEMS = (isEngineer) => [
+  { key: "dashboard", icon: "dashboard", label: t("dashboard") },
+  { key: "table", icon: "table", label: t("mainTable") },
+  ...(isEngineer ? [{ key: "tracking", icon: "calendar", label: t("monthlyTracking") }] : []),
+  { key: "settings", icon: "settings", label: t("settings") },
+];
+
+function renderApp() {
+  document.documentElement.dir = STRINGS[state.lang].dir;
+  document.documentElement.lang = state.lang;
+
+  const root = document.getElementById("app");
+  const isEngineer = state.user.role === "engineer";
+  const navItems = NAV_ITEMS(isEngineer);
+  const notifications = computeNotifications();
+
+  root.innerHTML = `
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">R</div>
+          <div>
+            <p class="sidebar-title">${escapeHtml(t("appName"))}</p>
+            <p class="sidebar-sub">${escapeHtml(t("appSub"))}</p>
+          </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav">
+          ${navItems
+            .map(
+              (it) => `
+            <button class="nav-item ${state.view === it.key ? "active" : ""}" data-view="${it.key}">
+              ${Icon[it.icon](18)} ${escapeHtml(it.label)}
+            </button>`
+            )
+            .join("")}
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <p class="sidebar-user-name">${escapeHtml(state.user.username)}</p>
+            <p class="sidebar-user-role">${escapeHtml(isEngineer ? t("roleEngineer") : t("roleCommercial"))}</p>
+          </div>
+          <button class="nav-item" id="logout-sidebar">${Icon.logout(18)} ${escapeHtml(t("logout"))}</button>
+        </div>
+      </aside>
+
+      <div class="main-col">
+        <header class="topbar">
+          <div class="topbar-brand topbar-brand-mobile">
+            <div class="topbar-logo">R</div>
+            <span style="font-weight:600;font-size:13px;color:var(--text-mid)">${escapeHtml(t("appName"))}</span>
+          </div>
+          <h1 class="topbar-title" style="display:none" id="topbar-title-desktop">${escapeHtml(navLabel(navItems))}</h1>
+          <div class="topbar-actions">
+            <div class="bell-wrap">
+              <button class="btn-icon" id="bell-btn">${Icon.bell(18)}${notifications.length ? `<span class="bell-badge">${notifications.length}</span>` : ""}</button>
+              ${state.ui.showNotifPanel ? renderNotifPanel(notifications) : ""}
+            </div>
+            <button class="btn-icon" id="logout-topbar" title="${escapeHtml(t("logout"))}">${Icon.logout(18)}</button>
+          </div>
+        </header>
+
+        <main class="content" id="view-content"></main>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      ${navItems
+        .map(
+          (it) => `
+        <button class="bottom-nav-item ${state.view === it.key ? "active" : ""}" data-view="${it.key}">
+          ${Icon[it.icon](18)}<span>${escapeHtml(it.label)}</span>
+        </button>`
+        )
+        .join("")}
+    </nav>
+  `;
+
+  // Show desktop title only on md+; simplest: always render but CSS handles mobile via topbar-brand-mobile/hidden logic
+  const titleEl = document.getElementById("topbar-title-desktop");
+  if (window.innerWidth >= 768) titleEl.style.display = "block";
+
+  // --- Bindings: navigation ---
+  document.querySelectorAll("[data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.view = btn.dataset.view;
+      state.ui.showNotifPanel = false;
+      renderApp();
+    });
+  });
+
+  document.getElementById("logout-sidebar").addEventListener("click", logout);
+  document.getElementById("logout-topbar").addEventListener("click", logout);
+
+  document.getElementById("bell-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.ui.showNotifPanel = !state.ui.showNotifPanel;
+    renderApp();
+  });
+
+  if (state.ui.showNotifPanel) {
+    document.addEventListener("click", closeNotifOnce, { once: true });
+  }
+
+  renderCurrentView();
+}
+
+function navLabel(navItems) {
+  const found = navItems.find((i) => i.key === state.view);
+  return found ? found.label : "";
+}
+
+function closeNotifOnce() {
+  if (state.ui.showNotifPanel) {
+    state.ui.showNotifPanel = false;
+    renderApp();
+  }
+}
+
+function logout() {
+  state.user = null;
+  state.view = "dashboard";
+  state.ui.loginError = "";
+  renderLogin();
+}
+
+function renderNotifPanel(notifications) {
+  return `
+    <div class="dropdown-panel" onclick="event.stopPropagation()">
+      <div class="dropdown-header">${escapeHtml(t("notifications"))}</div>
+      <div class="dropdown-list">
+        ${
+          notifications.length === 0
+            ? `<p class="card-empty">${escapeHtml(t("noNotifications"))}</p>`
+            : notifications
+                .map(
+                  (n) => `
+              <div class="notif-row">
+                <span style="color:${n.type === "danger" ? "var(--red)" : "var(--amber)"};flex-shrink:0;margin-top:2px;">${Icon.alertTriangle(14)}</span>
+                <span>${escapeHtml(n.text)}</span>
+              </div>`
+                )
+                .join("")
+        }
+      </div>
+    </div>
+  `;
+}
+
+function renderCurrentView() {
+  const container = document.getElementById("view-content");
+  const isEngineer = state.user.role === "engineer";
+
+  if (state.view === "dashboard") {
+    container.innerHTML = renderDashboardHtml();
+  } else if (state.view === "table") {
+    container.innerHTML = renderMainTableHtml();
+    bindMainTableEvents();
+  } else if (state.view === "tracking" && isEngineer) {
+    container.innerHTML = renderTrackingHtml();
+    bindTrackingEvents();
+  } else if (state.view === "settings") {
+    container.innerHTML = renderSettingsHtml();
+    bindSettingsEvents();
+  } else {
+    state.view = "dashboard";
+    container.innerHTML = renderDashboardHtml();
+  }
+}
+
+function renderDashboardHtml() {
+  const stock = computeStock();
+  const installed = computeInstalled();
+  const recent = state.mainRows.slice(0, 5);
+
+  return `
+    <div class="flex flex-col gap-3" style="gap:20px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;margin:0;">${escapeHtml(t("welcomeBack"))}, ${escapeHtml(state.user.username)}</h2>
+        <p style="font-size:13px;color:var(--text-light);margin:2px 0 0;">${escapeHtml(t("quickStats"))}</p>
+      </div>
+
+      <div class="flex gap-3" style="flex-wrap:wrap;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(26,58,107,0.1);color:var(--navy);">${Icon.package(22)}</div>
+          <div>
+            <p class="stat-value">${stock} ${escapeHtml(t("units"))}</p>
+            <p class="stat-label">${escapeHtml(t("stockCard"))}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(30,111,217,0.1);color:#1E6FD9;">${Icon.checkCircle(22)}</div>
+          <div>
+            <p class="stat-value">${installed} ${escapeHtml(t("units"))}</p>
+            <p class="stat-label">${escapeHtml(t("installedCard"))}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">${escapeHtml(t("recentActivity"))}</div>
+        ${
+          recent.length === 0
+            ? `<p class="card-empty">${escapeHtml(t("noActivity"))}</p>`
+            : recent
+                .map(
+                  (r) => `
+              <div class="activity-row">
+                <div style="min-width:0;">
+                  <p class="cell-strong truncate" style="margin:0;">${escapeHtml(r.enterprise)}</p>
+                  <p style="font-size:11px;color:var(--text-light);margin:2px 0 0;">${escapeHtml(r.location)} · ${escapeHtml(r.date)} · ${escapeHtml(t("by"))} ${escapeHtml(r.commercial)}</p>
+                </div>
+                <span class="badge ${r.status === "installed" ? "badge-emerald" : "badge-amber"}">
+                  ${escapeHtml(r.status === "installed" ? t("installedCard") : t("stockCard"))}
+                </span>
+              </div>`
+                )
+                .join("")
+        }
+      </div>
+    </div>
+  `;
+}
+// render-table.js — Tableau principal des terminaux Mini POS.
+
+let _editingRowId = null; // null = nouvelle entrée, sinon id de la ligne en cours d'édition
+let _pendingDeleteId = null;
+let _pendingContractFile = null; // { name } simulé, pas de vrai stockage de fichier hors-ligne
+
+function getFilteredSortedRows() {
+  const isEngineer = state.user.role === "engineer";
+  let rows = state.mainRows.slice();
+
+  const q = state.ui.query.trim().toLowerCase();
+  if (q) {
+    rows = rows.filter((row) =>
+      [row.enterprise, row.barcode, row.iccid, row.kitCode, row.location, row.commercial]
+        .filter(Boolean)
+        .some((v) => v.toLowerCase().includes(q))
+    );
+  }
+  if (state.ui.bankFilter) rows = rows.filter((r) => r.bank === state.ui.bankFilter);
+  if (state.ui.communeFilter) rows = rows.filter((r) => r.location === state.ui.communeFilter);
+  if (isEngineer && state.ui.repFilter) rows = rows.filter((r) => r.commercial === state.ui.repFilter);
+
+  const { sortKey, sortDir } = state.ui;
+  rows.sort((a, b) => {
+    const av = (a[sortKey] ?? "").toString();
+    const bv = (b[sortKey] ?? "").toString();
+    return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  return rows;
+}
+
+function tableColumns(isEngineer) {
+  const cols = [
+    { key: "date", label: t("col_date") },
+    { key: "location", label: t("col_location") },
+    { key: "barcode", label: t("col_barcode") },
+    { key: "iccid", label: t("col_iccid") },
+    { key: "kitCode", label: t("col_kit") },
+    { key: "enterprise", label: t("col_enterprise") },
+    { key: "observation", label: t("col_observation") },
+    { key: "payment", label: t("col_payment") },
+    { key: "bank", label: t("col_bank") },
+    { key: "contract", label: t("col_contract") },
+  ];
+  if (isEngineer) cols.push({ key: "commercial", label: t("col_commercial") });
+  return cols;
+}
+
+function renderMainTableHtml() {
+  const isEngineer = state.user.role === "engineer";
+  const rows = getFilteredSortedRows();
+  const cols = tableColumns(isEngineer);
+
+  return `
+    <div>
+      <div class="toolbar">
+        <div class="input-group search-box">
+          <span class="input-icon">${Icon.search(16)}</span>
+          <input id="search-input" type="text" placeholder="${escapeHtml(t("search"))}" value="${escapeHtml(state.ui.query)}" />
+        </div>
+        <div class="flex gap-2" style="flex-wrap:wrap;">
+          <button id="toggle-filters" class="btn ${state.ui.showFilters ? "btn-primary" : "btn-outline"}">${Icon.filter(15)} ${escapeHtml(t("filters"))}</button>
+          <div style="position:relative;">
+            <button id="toggle-export" class="btn btn-outline">${Icon.download(15)} ${escapeHtml(t("export"))}</button>
+            ${
+              state.ui.showExportMenu
+                ? `
+              <div class="dropdown-panel" style="width:200px;" onclick="event.stopPropagation()">
+                <button class="nav-item" id="export-pdf" style="color:var(--text-mid);padding:10px 16px;">${Icon.fileText(15)} ${escapeHtml(t("exportPdf"))}</button>
+                <button class="nav-item" id="export-xlsx" style="color:var(--text-mid);padding:10px 16px;">${Icon.fileSpreadsheet(15)} ${escapeHtml(t("exportXlsx"))}</button>
+                <button class="nav-item" id="export-csv" style="color:var(--text-mid);padding:10px 16px;">${Icon.fileSpreadsheet(15)} ${escapeHtml(t("exportCsv"))}</button>
+              </div>`
+                : ""
+            }
+          </div>
+          <button id="add-entry-btn" class="btn btn-primary">${Icon.plus(15)} ${escapeHtml(t("addEntry"))}</button>
+        </div>
+      </div>
+
+      ${
+        state.ui.showFilters
+          ? `
+        <div class="filters-bar">
+          <select id="filter-bank">
+            <option value="">${escapeHtml(t("col_bank"))}: ${escapeHtml(t("all"))}</option>
+            ${BANKS.map((b) => `<option value="${escapeHtml(b)}" ${state.ui.bankFilter === b ? "selected" : ""}>${escapeHtml(b)}</option>`).join("")}
+          </select>
+          <select id="filter-commune">
+            <option value="">${escapeHtml(t("col_location"))}: ${escapeHtml(t("all"))}</option>
+            ${COMMUNES.map((c) => `<option value="${escapeHtml(c)}" ${state.ui.communeFilter === c ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
+          </select>
+          ${
+            isEngineer
+              ? `
+            <select id="filter-rep">
+              <option value="">${escapeHtml(t("col_commercial"))}: ${escapeHtml(t("all"))}</option>
+              ${REPS.map((r) => `<option value="${escapeHtml(r)}" ${state.ui.repFilter === r ? "selected" : ""}>${escapeHtml(r)}</option>`).join("")}
+            </select>`
+              : ""
+          }
+        </div>`
+          : ""
+      }
+
+      <div class="card table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              ${cols
+                .map(
+                  (c) => `
+                <th data-sort="${c.key}">${escapeHtml(c.label)}
+                  <span style="display:inline-flex;vertical-align:middle;color:${state.ui.sortKey === c.key ? "var(--navy)" : "var(--text-light)"};transform:${state.ui.sortKey === c.key && state.ui.sortDir === "asc" ? "rotate(180deg)" : "none"}">${Icon.chevronDown(12)}</span>
+                </th>`
+                )
+                .join("")}
+              <th>${escapeHtml(t("col_actions"))}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              rows.length === 0
+                ? `<tr><td colspan="${cols.length + 1}" class="card-empty">—</td></tr>`
+                : rows
+                    .map(
+                      (row) => `
+              <tr>
+                <td>${escapeHtml(row.date)}</td>
+                <td>${escapeHtml(row.location)}</td>
+                <td class="cell-mono">${escapeHtml(row.barcode)}</td>
+                <td class="cell-mono" style="color:var(--text-light)">${escapeHtml(row.iccid)}</td>
+                <td>${escapeHtml(row.kitCode)}</td>
+                <td class="cell-strong">${escapeHtml(row.enterprise)}</td>
+                <td class="cell-trunc">${escapeHtml(row.observation) || "—"}</td>
+                <td>${escapeHtml(row.payment) || "—"}</td>
+                <td>${escapeHtml(row.bank) || "—"}</td>
+                <td>
+                  ${
+                    row.contract
+                      ? `<span class="contract-ok">${Icon.checkCircle(13)} ${escapeHtml(t("contractAttached"))}</span>`
+                      : `<span class="contract-missing">${Icon.alertTriangle(13)} ${escapeHtml(t("contractMissing"))}</span>`
+                  }
+                </td>
+                ${isEngineer ? `<td>${escapeHtml(row.commercial)}</td>` : ""}
+                <td>
+                  <div class="flex gap-1">
+                    <button class="btn-icon-sm" data-edit="${row.id}">${Icon.pencil(14)}</button>
+                    <button class="btn-icon-sm" data-delete="${row.id}">${Icon.trash(14)}</button>
+                  </div>
+                </td>
+              </tr>`
+                    )
+                    .join("")
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="row-count">${rows.length} ${escapeHtml(t("totalRows"))}</p>
+    </div>
+
+    ${state.ui.showEntryForm ? renderEntryFormModal() : ""}
+    ${_pendingDeleteId ? renderDeleteConfirmModal() : ""}
+  `;
+}
+
+function renderEntryFormModal() {
+  const editing = _editingRowId ? state.mainRows.find((r) => r.id === _editingRowId) : null;
+  const f = editing || {
+    date: todayISO(),
+    location: "",
+    barcode: "",
+    iccid: "",
+    kitCode: "",
+    enterprise: "",
+    observation: "",
+    payment: "",
+    bank: "",
+    contract: false,
+    contractName: null,
+    commercial: REPS[0],
+    status: "stock",
+  };
+
+  return `
+    <div class="modal-overlay" id="entry-modal-overlay">
+      <div class="modal-box wide">
+        <div class="modal-head">
+          <h3>${escapeHtml(editing ? t("editEntry") : t("newEntry"))}</h3>
+          <button class="btn-icon-sm" id="close-entry-modal">${Icon.x(18)}</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_date"))}</label>
+              <input id="f-date" type="date" class="input-plain" value="${escapeHtml(f.date)}" />
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_location"))}</label>
+              <select id="f-location" class="input-plain">
+                <option value="">—</option>
+                ${COMMUNES.map((c) => `<option value="${escapeHtml(c)}" ${f.location === c ? "selected" : ""}>${escapeHtml(c)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_barcode"))}</label>
+              <div class="flex gap-1">
+                <input id="f-barcode" type="text" class="input-plain" value="${escapeHtml(f.barcode)}" />
+                <button id="f-scan" type="button" class="btn-icon" title="${escapeHtml(t("scanBarcode"))}">${Icon.camera(16)}</button>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_iccid"))}</label>
+              <input id="f-iccid" type="text" class="input-plain" value="${escapeHtml(f.iccid || "")}" />
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_kit"))}</label>
+              <input id="f-kit" type="text" class="input-plain" value="${escapeHtml(f.kitCode || "")}" />
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_enterprise"))}</label>
+              <input id="f-enterprise" type="text" class="input-plain" value="${escapeHtml(f.enterprise)}" />
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_payment"))}</label>
+              <input id="f-payment" type="text" class="input-plain" value="${escapeHtml(f.payment || "")}" />
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_bank"))}</label>
+              <select id="f-bank" class="input-plain">
+                <option value="">—</option>
+                ${BANKS.map((b) => `<option value="${escapeHtml(b)}" ${f.bank === b ? "selected" : ""}>${escapeHtml(b)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("col_commercial"))}</label>
+              <select id="f-commercial" class="input-plain">
+                ${REPS.map((r) => `<option value="${escapeHtml(r)}" ${f.commercial === r ? "selected" : ""}>${escapeHtml(r)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">${escapeHtml(t("status"))}</label>
+              <select id="f-status" class="input-plain">
+                <option value="stock" ${f.status === "stock" ? "selected" : ""}>${escapeHtml(t("stockCard"))}</option>
+                <option value="installed" ${f.status === "installed" ? "selected" : ""}>${escapeHtml(t("installedCard"))}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">${escapeHtml(t("col_observation"))}</label>
+            <textarea id="f-observation" class="input-plain">${escapeHtml(f.observation || "")}</textarea>
+          </div>
+
+          <div class="field">
+            <label class="field-label">${escapeHtml(t("col_contract"))}</label>
+            <label class="file-drop">
+              ${Icon.paperclip(16)}
+              <span id="f-contract-label">${escapeHtml(_pendingContractFile?.name || f.contractName || t("noFile"))}</span>
+              <input id="f-contract-input" type="file" accept=".pdf,.jpg,.jpeg,.png" class="hidden" />
+              <span class="upload-tag">${escapeHtml(t("upload"))}</span>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button id="cancel-entry" class="btn btn-ghost">${escapeHtml(t("cancel"))}</button>
+            <button id="save-entry" class="btn btn-primary">${escapeHtml(t("save"))}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDeleteConfirmModal() {
+  return `
+    <div class="modal-overlay" id="delete-modal-overlay">
+      <div class="modal-box">
+        <div class="modal-head">
+          <h3>${escapeHtml(t("delete"))}</h3>
+          <button class="btn-icon-sm" id="close-delete-modal">${Icon.x(18)}</button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-text">${escapeHtml(t("confirmDelete"))}</p>
+          <div class="modal-actions">
+            <button id="cancel-delete" class="btn btn-ghost">${escapeHtml(t("no"))}</button>
+            <button id="confirm-delete" class="btn btn-danger">${escapeHtml(t("yes"))}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function exportRowsCsv(rows) {
+  const headers = [
+    t("col_date"), t("col_location"), t("col_barcode"), t("col_iccid"), t("col_kit"),
+    t("col_enterprise"), t("col_observation"), t("col_payment"), t("col_bank"), t("col_commercial"),
+  ];
+  const lines = [headers.join(",")];
+  rows.forEach((r) => {
+    lines.push(
+      [r.date, r.location, r.barcode, r.iccid, r.kitCode, r.enterprise, r.observation, r.payment, r.bank, r.commercial]
+        .map((v) => `"${(v ?? "").toString().replace(/"/g, '""')}"`)
+        .join(",")
+    );
+  });
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "minipos_export.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function bindMainTableEvents() {
+  const isEngineer = state.user.role === "engineer";
+
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    state.ui.query = e.target.value;
+    document.getElementById("view-content").innerHTML = renderMainTableHtml();
+    bindMainTableEvents();
+  });
+
+  document.getElementById("toggle-filters").addEventListener("click", () => {
+    state.ui.showFilters = !state.ui.showFilters;
+    rerenderTable();
+  });
+
+  document.getElementById("toggle-export").addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.ui.showExportMenu = !state.ui.showExportMenu;
+    rerenderTable();
+    if (state.ui.showExportMenu) document.addEventListener("click", closeExportOnce, { once: true });
+  });
+
+  const exportPdfBtn = document.getElementById("export-pdf");
+  if (exportPdfBtn) exportPdfBtn.addEventListener("click", () => { window.print(); state.ui.showExportMenu = false; rerenderTable(); });
+  const exportXlsxBtn = document.getElementById("export-xlsx");
+  if (exportXlsxBtn) exportXlsxBtn.addEventListener("click", () => { exportRowsCsv(getFilteredSortedRows()); state.ui.showExportMenu = false; rerenderTable(); });
+  const exportCsvBtn = document.getElementById("export-csv");
+  if (exportCsvBtn) exportCsvBtn.addEventListener("click", () => { exportRowsCsv(getFilteredSortedRows()); state.ui.showExportMenu = false; rerenderTable(); });
+
+  document.getElementById("add-entry-btn").addEventListener("click", () => {
+    _editingRowId = null;
+    _pendingContractFile = null;
+    state.ui.showEntryForm = true;
+    rerenderTable();
+  });
+
+  document.querySelectorAll("th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sort;
+      if (state.ui.sortKey === key) {
+        state.ui.sortDir = state.ui.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.ui.sortKey = key;
+        state.ui.sortDir = "asc";
+      }
+      rerenderTable();
+    });
+  });
+
+  document.querySelectorAll("[data-edit]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      _editingRowId = btn.dataset.edit;
+      _pendingContractFile = null;
+      state.ui.showEntryForm = true;
+      rerenderTable();
+    });
+  });
+
+  document.querySelectorAll("[data-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      _pendingDeleteId = btn.dataset.delete;
+      rerenderTable();
+    });
+  });
+
+  if (state.ui.showFilters) {
+    const bankSel = document.getElementById("filter-bank");
+    if (bankSel) bankSel.addEventListener("change", (e) => { state.ui.bankFilter = e.target.value; rerenderTable(); });
+    const communeSel = document.getElementById("filter-commune");
+    if (communeSel) communeSel.addEventListener("change", (e) => { state.ui.communeFilter = e.target.value; rerenderTable(); });
+    const repSel = document.getElementById("filter-rep");
+    if (repSel) repSel.addEventListener("change", (e) => { state.ui.repFilter = e.target.value; rerenderTable(); });
+  }
+
+  if (state.ui.showEntryForm) bindEntryFormEvents();
+  if (_pendingDeleteId) bindDeleteModalEvents();
+}
+
+function closeExportOnce() {
+  if (state.ui.showExportMenu) {
+    state.ui.showExportMenu = false;
+    rerenderTable();
+  }
+}
+
+function rerenderTable() {
+  document.getElementById("view-content").innerHTML = renderMainTableHtml();
+  bindMainTableEvents();
+}
+
+function bindEntryFormEvents() {
+  const overlay = document.getElementById("entry-modal-overlay");
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeEntryForm();
+  });
+  document.getElementById("close-entry-modal").addEventListener("click", closeEntryForm);
+  document.getElementById("cancel-entry").addEventListener("click", closeEntryForm);
+
+  document.getElementById("f-scan").addEventListener("click", () => {
+    document.getElementById("f-barcode").value = "MP" + Math.floor(100000 + Math.random() * 899999);
+  });
+
+  document.getElementById("f-contract-input").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      _pendingContractFile = { name: file.name };
+      document.getElementById("f-contract-label").textContent = file.name;
+    }
+  });
+
+  document.getElementById("save-entry").addEventListener("click", saveEntryForm);
+}
+
+function closeEntryForm() {
+  state.ui.showEntryForm = false;
+  _editingRowId = null;
+  _pendingContractFile = null;
+  rerenderTable();
+}
+
+function saveEntryForm() {
+  const date = document.getElementById("f-date").value;
+  const location = document.getElementById("f-location").value;
+  const barcode = document.getElementById("f-barcode").value.trim();
+  const enterprise = document.getElementById("f-enterprise").value.trim();
+
+  if (!date || !enterprise || !barcode) {
+    alert(t("requiredField"));
+    return;
+  }
+
+  const data = {
+    date,
+    location,
+    barcode,
+    iccid: document.getElementById("f-iccid").value.trim(),
+    kitCode: document.getElementById("f-kit").value.trim(),
+    enterprise,
+    observation: document.getElementById("f-observation").value.trim(),
+    payment: document.getElementById("f-payment").value.trim(),
+    bank: document.getElementById("f-bank").value,
+    commercial: document.getElementById("f-commercial").value,
+    status: document.getElementById("f-status").value,
+  };
+
+  if (_pendingContractFile) {
+    data.contract = true;
+    data.contractName = _pendingContractFile.name;
+  }
+
+  if (_editingRowId) {
+    const idx = state.mainRows.findIndex((r) => r.id === _editingRowId);
+    if (idx !== -1) {
+      state.mainRows[idx] = {
+        ...state.mainRows[idx],
+        ...data,
+        contract: _pendingContractFile ? true : state.mainRows[idx].contract,
+        contractName: _pendingContractFile ? _pendingContractFile.name : state.mainRows[idx].contractName,
+      };
+    }
+  } else {
+    state.mainRows.unshift({
+      id: uid(),
+      ...data,
+      contract: !!_pendingContractFile,
+      contractName: _pendingContractFile ? _pendingContractFile.name : null,
+    });
+  }
+
+  closeEntryForm();
+}
+
+function bindDeleteModalEvents() {
+  const overlay = document.getElementById("delete-modal-overlay");
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) { _pendingDeleteId = null; rerenderTable(); }
+  });
+  document.getElementById("close-delete-modal").addEventListener("click", () => { _pendingDeleteId = null; rerenderTable(); });
+  document.getElementById("cancel-delete").addEventListener("click", () => { _pendingDeleteId = null; rerenderTable(); });
+  document.getElementById("confirm-delete").addEventListener("click", () => {
+    state.mainRows = state.mainRows.filter((r) => r.id !== _pendingDeleteId);
+    _pendingDeleteId = null;
+    rerenderTable();
+  });
+}
+// render-tracking.js — Tableau de suivi mensuel des commerciaux (ingénieur uniquement).
+
+const MONTH_NAMES = {
+  fr: ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  ar: ["جانفي","فيفري","مارس","أفريل","ماي","جوان","جويلية","أوت","سبتمبر","أكتوبر","نوفمبر","ديسمبر"],
+};
+
+function renderTrackingHtml() {
+  const { month, year } = state.tracking;
+  const nDays = daysInMonth(month, year);
+  const days = Array.from({ length: nDays }, (_, i) => i + 1);
+  const monthNames = MONTH_NAMES[state.lang];
+
+  return `
+    <div>
+      <div class="toolbar">
+        <h2 style="font-size:16px;font-weight:700;margin:0;">${escapeHtml(t("monthlyTracking"))}</h2>
+        <div class="flex gap-2">
+          <select id="tracking-month" class="input-plain" style="padding:6px 10px;">
+            ${monthNames.map((m, i) => `<option value="${i}" ${month === i ? "selected" : ""}>${escapeHtml(m)}</option>`).join("")}
+          </select>
+          <select id="tracking-year" class="input-plain" style="padding:6px 10px;">
+            ${[year - 1, year, year + 1].map((y) => `<option value="${y}" ${year === y ? "selected" : ""}>${y}</option>`).join("")}
+          </select>
+          <button id="tracking-print" class="btn btn-outline">${Icon.fileText(14)} ${escapeHtml(t("exportPdf"))}</button>
+        </div>
+      </div>
+
+      <div class="card table-scroll">
+        <table class="tracking-table">
+          <thead>
+            <tr>
+              <th class="tracking-sticky" style="inset-inline-start:0;min-width:110px;">${escapeHtml(t("commercialReg"))}</th>
+              <th class="tracking-sticky" style="inset-inline-start:110px;min-width:140px;">${escapeHtml(t("commercialName"))}</th>
+              <th class="tracking-sticky" style="inset-inline-start:250px;min-width:120px;">${escapeHtml(t("phone"))}</th>
+              ${days.map((d) => `<th style="min-width:30px;">${d}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${state.trackingRows
+              .map(
+                (row) => `
+              <tr>
+                <td class="tracking-sticky" style="inset-inline-start:0;">${escapeHtml(row.region)}</td>
+                <td class="tracking-sticky cell-strong" style="inset-inline-start:110px;">${escapeHtml(row.name)}</td>
+                <td class="tracking-sticky" style="inset-inline-start:250px;color:var(--text-light);">${escapeHtml(row.phone)}</td>
+                ${days
+                  .map((d) => {
+                    const key = `${year}-${month}-${d}`;
+                    const cell = row.cells[key];
+                    const colorHex = cell?.color ? ACTIVITY_COLORS[cell.color].hex : null;
+                    const isActive = state.ui.activeTrackingCell && state.ui.activeTrackingCell.rowId === row.id && state.ui.activeTrackingCell.day === d;
+                    return `
+                    <td style="position:relative;text-align:center;">
+                      <button class="tracking-cell-btn" data-row="${row.id}" data-day="${d}" title="${escapeHtml(cell?.note || "")}" style="background:${colorHex ? colorHex + "33" : "transparent"};">
+                        ${colorHex ? `<span class="tracking-dot" style="background:${colorHex}"></span>` : ""}
+                      </button>
+                      ${isActive ? renderColorPickerPopup(row.id, d, cell) : ""}
+                    </td>`;
+                  })
+                  .join("")}
+              </tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:16px;margin-top:14px;">
+        <p style="font-size:12px;font-weight:600;color:var(--text-light);margin:0 0 10px;">${escapeHtml(t("legend"))}</p>
+        <div class="legend-row">
+          ${Object.entries(ACTIVITY_COLORS)
+            .map(
+              ([key, val]) => `
+            <div class="legend-item">
+              <span class="color-dot" style="background:${val.hex}"></span>
+              ${escapeHtml(t(val.labelKey))}
+            </div>`
+            )
+            .join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderColorPickerPopup(rowId, day, cell) {
+  return `
+    <div class="color-picker-popup" id="color-popup" onclick="event.stopPropagation()">
+      <p style="font-size:11px;font-weight:600;color:var(--text-light);margin:0 0 8px;">${escapeHtml(t("selectColor"))}</p>
+      <div class="color-grid">
+        ${Object.entries(ACTIVITY_COLORS)
+          .map(
+            ([key, val]) => `
+          <button class="color-opt ${cell?.color === key ? "selected" : ""}" data-color="${key}" style="background:${val.hex}26;">
+            <span class="color-dot" style="background:${val.hex}"></span>
+            <span class="truncate">${escapeHtml(t(val.labelKey))}</span>
+          </button>`
+          )
+          .join("")}
+      </div>
+      <button id="clear-color" class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px;">${escapeHtml(t("none"))}</button>
+      <input id="cell-note-input" type="text" class="input-plain" placeholder="${escapeHtml(t("cellNote"))}" value="${escapeHtml(cell?.note || "")}" style="font-size:12px;padding:6px 8px;" />
+      <button id="close-color-popup" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;">${escapeHtml(t("close"))}</button>
+    </div>
+  `;
+}
+
+function bindTrackingEvents() {
+  document.getElementById("tracking-month").addEventListener("change", (e) => {
+    state.tracking.month = parseInt(e.target.value, 10);
+    rerenderTracking();
+  });
+  document.getElementById("tracking-year").addEventListener("change", (e) => {
+    state.tracking.year = parseInt(e.target.value, 10);
+    rerenderTracking();
+  });
+  document.getElementById("tracking-print").addEventListener("click", () => window.print());
+
+  document.querySelectorAll(".tracking-cell-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const rowId = btn.dataset.row;
+      const day = parseInt(btn.dataset.day, 10);
+      const isSame = state.ui.activeTrackingCell && state.ui.activeTrackingCell.rowId === rowId && state.ui.activeTrackingCell.day === day;
+      state.ui.activeTrackingCell = isSame ? null : { rowId, day };
+      rerenderTracking();
+    });
+  });
+
+  if (state.ui.activeTrackingCell) {
+    const { rowId, day } = state.ui.activeTrackingCell;
+    const row = state.trackingRows.find((r) => r.id === rowId);
+    const key = `${state.tracking.year}-${state.tracking.month}-${day}`;
+    const cell = row.cells[key];
+
+    document.querySelectorAll(".color-opt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        updateTrackingCell(rowId, day, { ...cell, color: btn.dataset.color });
+      });
+    });
+    document.getElementById("clear-color").addEventListener("click", () => {
+      updateTrackingCell(rowId, day, { ...cell, color: null });
+    });
+    document.getElementById("close-color-popup").addEventListener("click", () => {
+      state.ui.activeTrackingCell = null;
+      rerenderTracking();
+    });
+    document.getElementById("cell-note-input").addEventListener("change", (e) => {
+      updateTrackingCell(rowId, day, { ...cell, note: e.target.value });
+    });
+
+    document.addEventListener("click", closeColorPopupOnce, { once: true });
+  }
+}
+
+function closeColorPopupOnce() {
+  if (state.ui.activeTrackingCell) {
+    state.ui.activeTrackingCell = null;
+    rerenderTracking();
+  }
+}
+
+function updateTrackingCell(rowId, day, value) {
+  const row = state.trackingRows.find((r) => r.id === rowId);
+  if (!row) return;
+  const key = `${state.tracking.year}-${state.tracking.month}-${day}`;
+  row.cells[key] = value;
+  rerenderTracking();
+}
+
+function rerenderTracking() {
+  document.getElementById("view-content").innerHTML = renderTrackingHtml();
+  bindTrackingEvents();
+}
+// render-settings.js — Vue des paramètres (profil + langue).
+
+function renderSettingsHtml() {
+  const isEngineer = state.user.role === "engineer";
+  const initials = state.user.username.slice(0, 2).toUpperCase();
+
+  return `
+    <div class="settings-section" style="display:flex;flex-direction:column;gap:16px;">
+      <div class="card" style="padding:18px;">
+        <p style="font-size:13px;font-weight:600;margin:0 0 12px;">${escapeHtml(t("profile"))}</p>
+        <div class="flex items-center gap-3">
+          <div class="avatar-circle">${escapeHtml(initials)}</div>
+          <div>
+            <p style="font-size:13px;font-weight:600;margin:0;">${escapeHtml(state.user.username)}</p>
+            <p style="font-size:11px;color:var(--text-light);margin:2px 0 0;">${escapeHtml(isEngineer ? t("roleEngineer") : t("roleCommercial"))}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px;">
+        <p style="font-size:13px;font-weight:600;margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--navy);display:inline-flex;">${Icon.globe(16)}</span> ${escapeHtml(t("language"))}
+        </p>
+        <div class="lang-grid">
+          ${LANGS.map((l) => `<button data-lang="${l.code}" class="${state.lang === l.code ? "active" : ""}">${escapeHtml(l.label)}</button>`).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindSettingsEvents() {
+  document.querySelectorAll(".lang-grid button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.lang = btn.dataset.lang;
+      renderApp();
+    });
+  });
+}
+// main.js — Point d'entrée. Démarre l'application au chargement de la page.
+
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    if (state.user) {
+      renderApp();
+    } else {
+      renderLogin();
+    }
+  } catch (err) {
+    console.error(err);
+    showBootError(err.message || "Erreur inconnue");
+  }
+
+  // Masquer l'écran de démarrage une fois le rendu initial terminé
+  const boot = document.getElementById("boot-screen");
+  if (boot) boot.style.display = "none";
+});
+
+function showBootError(message) {
+  const boot = document.getElementById("boot-screen");
+  if (!boot) return;
+  boot.innerHTML = `
+    <div style="max-width:480px;">
+      <p style="font-size:18px;font-weight:600;margin-bottom:8px;">⚠️ Une erreur est survenue</p>
+      <p style="font-size:13px;opacity:0.85;margin-bottom:4px;">${message}</p>
+      <p style="font-size:12px;opacity:0.6;margin-top:12px;">Rechargez la page. Si le problème persiste, vérifiez que tous les fichiers (.js, .css) sont bien présents dans le même dossier que index.html.</p>
+    </div>
+  `;
+  boot.style.display = "flex";
+}
+
+window.addEventListener("error", (e) => {
+  showBootError(e.message || "Erreur JavaScript inconnue");
+});
+</script>
+
+<script>
+// PWA : enregistrement du service worker pour le mode hors-ligne.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .catch((err) => console.warn("Service worker non enregistré :", err));
+  });
+}
+</script>
+
+</body>
+</html>
